@@ -1,0 +1,641 @@
+"""
+Portfolio site for Surla Bala Teja - Flask version.
+
+Run with:
+    pip install flask
+    python portfolio_app.py
+
+Then open http://127.0.0.1:5000 in your browser.
+"""
+
+from flask import Flask
+
+app = Flask(__name__)
+
+PORTFOLIO_HTML = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Surla Bala Teja — Cybersecurity Engineer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --void:#0A0E13;
+    --panel:#121823;
+    --panel-2:#161E2B;
+    --line:#26323F;
+    --line-soft:#1C2530;
+    --cyan:#5EEAD4;
+    --cyan-dim:rgba(94,234,212,.14);
+    --amber:#FBBF24;
+    --paper:#E9EEF2;
+    --muted:#8695A6;
+    --radius:14px;
+    --font-display:'Space Grotesk',sans-serif;
+    --font-body:'Inter',sans-serif;
+    --font-mono:'JetBrains Mono',monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--void);
+    color:var(--paper);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    position:relative;
+    overflow-x:hidden;
+  }
+  a{color:inherit;text-decoration:none;}
+  ::selection{background:var(--cyan-dim);color:var(--cyan);}
+  :focus-visible{outline:2px solid var(--cyan);outline-offset:3px;}
+
+  /* Ambient background */
+  .grid-bg{
+    position:fixed;inset:0;z-index:0;pointer-events:none;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size:64px 64px;
+    mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, #000 20%, transparent 75%);
+    opacity:.5;
+  }
+  .scanline{
+    position:fixed;left:0;right:0;height:140px;z-index:0;pointer-events:none;
+    background:linear-gradient(180deg, transparent, var(--cyan-dim), transparent);
+    animation:scan 9s linear infinite;
+    opacity:.5;
+  }
+  @keyframes scan{
+    0%{ top:-140px; }
+    100%{ top:100vh; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .scanline{animation:none;display:none;}
+    html{scroll-behavior:auto;}
+  }
+
+  section, header, footer, nav{position:relative;z-index:1;}
+
+  .wrap{max-width:1120px;margin:0 auto;padding:0 28px;}
+
+  /* NAV */
+  .nav{
+    position:sticky;top:0;z-index:20;
+    background:rgba(10,14,19,.78);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .nav-inner{
+    max-width:1120px;margin:0 auto;padding:16px 28px;
+    display:flex;align-items:center;justify-content:space-between;gap:16px;
+  }
+  .nav-mark{
+    font-family:var(--font-mono);font-weight:600;font-size:.95rem;
+    letter-spacing:.06em;color:var(--paper);
+    display:flex;align-items:center;gap:8px;
+  }
+  .nav-mark .dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);}
+  .nav-links{list-style:none;display:flex;gap:28px;margin:0;padding:0;}
+  .nav-links a{font-size:.88rem;color:var(--muted);transition:color .2s;}
+  .nav-links a:hover{color:var(--cyan);}
+  .nav-cta{
+    font-family:var(--font-mono);font-size:.8rem;color:var(--void);
+    background:var(--cyan);padding:9px 16px;border-radius:8px;
+    white-space:nowrap;transition:transform .15s, box-shadow .15s;
+  }
+  .nav-cta:hover{transform:translateY(-1px);box-shadow:0 6px 18px var(--cyan-dim);}
+  @media (max-width:800px){ .nav-links{display:none;} }
+
+  /* HERO */
+  .hero{padding:96px 0 80px;}
+  .hero-inner{
+    max-width:1120px;margin:0 auto;padding:0 28px;
+    display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;
+  }
+  .eyebrow{
+    font-family:var(--font-mono);font-size:.78rem;letter-spacing:.16em;
+    color:var(--cyan);text-transform:uppercase;margin:0 0 18px;
+  }
+  h1{
+    font-family:var(--font-display);font-weight:700;
+    font-size:clamp(2.4rem, 5.2vw, 3.6rem);line-height:1.05;margin:0 0 18px;letter-spacing:-.01em;
+  }
+  h1 span{color:var(--cyan);}
+  .role{font-size:1.18rem;color:var(--paper);margin:0 0 14px;font-weight:500;}
+  .lede{color:var(--muted);font-size:1rem;max-width:46ch;margin:0 0 32px;}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;}
+  .btn{
+    font-family:var(--font-mono);font-size:.85rem;padding:12px 22px;border-radius:8px;
+    transition:transform .15s, box-shadow .15s, background .15s, border-color .15s;
+    display:inline-block;
+  }
+  .btn-primary{background:var(--cyan);color:var(--void);font-weight:600;}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px var(--cyan-dim);}
+  .btn-ghost{border:1px solid var(--line);color:var(--paper);}
+  .btn-ghost:hover{border-color:var(--cyan);color:var(--cyan);}
+
+  /* 3D BADGE */
+  .badge-stage{display:flex;justify-content:center;perspective:1400px;}
+  .badge-wrap{width:100%;max-width:300px;}
+  .badge{
+    transform-style:preserve-3d;
+    transition:transform .12s ease-out;
+    background:linear-gradient(160deg, var(--panel-2), var(--panel));
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:22px 22px 18px;
+    box-shadow:0 30px 60px -20px rgba(0,0,0,.6), 0 0 0 1px rgba(94,234,212,.04) inset;
+    will-change:transform;
+  }
+  .badge-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;}
+  .badge-label{font-family:var(--font-mono);font-size:.68rem;letter-spacing:.12em;color:var(--muted);}
+  .badge-status{
+    font-family:var(--font-mono);font-size:.66rem;letter-spacing:.1em;color:var(--cyan);
+    display:flex;align-items:center;gap:6px;
+  }
+  .badge-status i{width:6px;height:6px;border-radius:50%;background:var(--cyan);box-shadow:0 0 8px var(--cyan);display:inline-block;}
+  .badge-photo{
+    width:64px;height:64px;border-radius:12px;
+    background:linear-gradient(135deg, var(--cyan-dim), transparent);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--font-display);font-weight:700;font-size:1.3rem;color:var(--cyan);
+    margin-bottom:16px;
+  }
+  .badge-name{font-family:var(--font-display);font-weight:700;font-size:1.05rem;letter-spacing:.01em;margin-bottom:4px;}
+  .badge-role{font-family:var(--font-mono);font-size:.68rem;color:var(--muted);letter-spacing:.05em;margin-bottom:18px;}
+  .badge-barcode{
+    height:26px;border-radius:4px;margin-bottom:10px;
+    background:repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px 5px, var(--muted) 5px 6px, transparent 6px 9px);
+    opacity:.55;
+  }
+  .badge-id{font-family:var(--font-mono);font-size:.64rem;color:var(--muted);letter-spacing:.08em;}
+
+  /* SECTION HEADS */
+  .section{padding:88px 0;border-top:1px solid var(--line-soft);}
+  .section-head{margin-bottom:44px;max-width:60ch;}
+  .kicker{
+    font-family:var(--font-mono);font-size:.75rem;letter-spacing:.14em;
+    color:var(--cyan);text-transform:uppercase;margin:0 0 10px;
+  }
+  .section-head h2{font-family:var(--font-display);font-size:clamp(1.6rem,3vw,2.1rem);margin:0 0 12px;font-weight:700;}
+  .section-head p{color:var(--muted);margin:0;}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(22px);transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in-view{opacity:1;transform:translateY(0);}
+
+  /* ABOUT */
+  .about-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:start;}
+  .about-grid p{color:var(--paper);opacity:.9;margin:0 0 16px;}
+  .fact-list{list-style:none;margin:0;padding:0;display:grid;gap:14px;}
+  .fact-list li{
+    font-family:var(--font-mono);font-size:.82rem;color:var(--muted);
+    display:flex;justify-content:space-between;border-bottom:1px dashed var(--line);padding-bottom:12px;
+  }
+  .fact-list li span:last-child{color:var(--paper);}
+  @media (max-width:800px){ .about-grid{grid-template-columns:1fr;} }
+
+  /* SKILLS */
+  .skill-groups{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;}
+  .skill-group{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);padding:20px;
+  }
+  .skill-group h3{
+    font-family:var(--font-mono);font-size:.72rem;letter-spacing:.1em;color:var(--cyan);
+    text-transform:uppercase;margin:0 0 14px;
+  }
+  .chips{display:flex;flex-wrap:wrap;gap:8px;}
+  .chip{
+    font-family:var(--font-mono);font-size:.78rem;color:var(--paper);
+    border:1px solid var(--line);padding:5px 10px;border-radius:6px;background:var(--void);
+  }
+  @media (max-width:900px){ .skill-groups{grid-template-columns:repeat(2,1fr);} }
+  @media (max-width:520px){ .skill-groups{grid-template-columns:1fr;} }
+
+  /* PROJECTS */
+  .project-list{display:grid;gap:26px;}
+  .project-card{
+    perspective:1200px;
+  }
+  .project-card-inner{
+    transform-style:preserve-3d;transition:transform .12s ease-out;
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:30px 32px;
+    display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;
+    will-change:transform;
+  }
+  .project-meta{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;}
+  .tag{
+    font-family:var(--font-mono);font-size:.68rem;letter-spacing:.08em;
+    padding:4px 10px;border-radius:5px;text-transform:uppercase;
+  }
+  .tag-domain{background:var(--cyan-dim);color:var(--cyan);}
+  .tag-status{border:1px solid var(--line);color:var(--muted);}
+  .project-card-inner h3{font-family:var(--font-display);font-size:1.3rem;margin:0 0 10px;}
+  .project-card-inner p{color:var(--muted);margin:0 0 16px;max-width:62ch;}
+  .stack-row{display:flex;flex-wrap:wrap;gap:8px;}
+  .stack-row span{
+    font-family:var(--font-mono);font-size:.72rem;color:var(--paper);opacity:.75;
+  }
+  .stack-row span:not(:last-child)::after{content:'·';margin-left:8px;color:var(--line);}
+  .project-index{
+    font-family:var(--font-mono);font-size:.72rem;color:var(--line);
+    writing-mode:vertical-rl;text-orientation:mixed;letter-spacing:.1em;
+  }
+  @media (max-width:700px){
+    .project-card-inner{grid-template-columns:1fr;padding:24px;}
+    .project-index{display:none;}
+  }
+
+  /* EXPERIENCE / EDUCATION timeline */
+  .timeline{border-left:1px solid var(--line);margin-left:6px;}
+  .t-item{position:relative;padding:0 0 34px 28px;}
+  .t-item::before{
+    content:'';position:absolute;left:-5px;top:4px;width:9px;height:9px;border-radius:50%;
+    background:var(--void);border:2px solid var(--cyan);
+  }
+  .t-item:last-child{padding-bottom:0;}
+  .t-top{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:6px;}
+  .t-top h3{font-family:var(--font-display);font-size:1.05rem;margin:0;font-weight:600;}
+  .t-top time{font-family:var(--font-mono);font-size:.75rem;color:var(--muted);white-space:nowrap;}
+  .t-org{font-size:.9rem;color:var(--cyan);margin:0 0 8px;font-family:var(--font-mono);}
+  .t-item p{color:var(--muted);margin:0;max-width:64ch;}
+
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:60px;}
+  @media (max-width:850px){ .two-col{grid-template-columns:1fr;gap:48px;} }
+
+  .cert-list{list-style:none;margin:0;padding:0;display:grid;gap:12px;}
+  .cert-list li{
+    display:flex;align-items:baseline;gap:10px;
+    font-size:.92rem;color:var(--paper);opacity:.9;
+    border-bottom:1px solid var(--line-soft);padding-bottom:12px;
+  }
+  .cert-list li::before{content:'//';font-family:var(--font-mono);color:var(--cyan);opacity:.7;}
+
+  /* CONTACT */
+  .contact-panel{
+    background:var(--panel);border:1px solid var(--line-soft);border-radius:var(--radius);
+    padding:44px;display:grid;grid-template-columns:1.2fr 1fr;gap:36px;align-items:center;
+  }
+  .contact-panel h2{font-family:var(--font-display);font-size:1.8rem;margin:0 0 12px;}
+  .contact-panel p{color:var(--muted);margin:0;max-width:44ch;}
+  .contact-links{display:grid;gap:12px;}
+  .contact-links a{
+    font-family:var(--font-mono);font-size:.88rem;color:var(--paper);
+    border:1px solid var(--line);border-radius:8px;padding:12px 16px;
+    display:flex;justify-content:space-between;transition:border-color .15s, color .15s;
+  }
+  .contact-links a:hover{border-color:var(--cyan);color:var(--cyan);}
+  .contact-links a span{color:var(--muted);}
+  @media (max-width:750px){ .contact-panel{grid-template-columns:1fr;padding:30px;} }
+
+  footer{padding:36px 0 50px;border-top:1px solid var(--line-soft);}
+  .foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    font-family:var(--font-mono);font-size:.76rem;color:var(--muted);}
+  .foot-row strong{color:var(--paper);}
+
+  @media (max-width:850px){
+    .hero-inner{grid-template-columns:1fr;}
+    .badge-stage{margin-top:12px;}
+  }
+</style>
+</head>
+<body>
+<div class="grid-bg"></div>
+<div class="scanline"></div>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="nav-mark" href="#top">S. BALA TEJA <span class="dot"></span></a>
+    <ul class="nav-links">
+      <li><a href="#about">About</a></li>
+      <li><a href="#skills">Skills</a></li>
+      <li><a href="#projects">Projects</a></li>
+      <li><a href="#experience">Experience</a></li>
+      <li><a href="#education">Education</a></li>
+    </ul>
+    <a class="nav-cta" href="#contact">Get in touch</a>
+  </div>
+</nav>
+
+<header id="top" class="hero">
+  <div class="hero-inner">
+    <div class="hero-text">
+      <p class="eyebrow">B.Tech · Cybersecurity · Class of 2025</p>
+      <h1>Surla Bala <span>Teja</span></h1>
+      <p class="role">Cybersecurity engineer, building systems that watch for what shouldn't be there.</p>
+      <p class="lede">Cybersecurity graduate focused on intrusion detection, threat analysis and applied AI — with hands-on work spanning IoT security, healthcare software and full-stack development.</p>
+      <div class="hero-actions">
+        <a href="#projects" class="btn btn-primary">View projects</a>
+        <a href="#contact" class="btn btn-ghost">Contact</a>
+      </div>
+    </div>
+    <div class="badge-stage">
+      <div class="badge-wrap">
+        <div class="badge" id="badge">
+          <div class="badge-top">
+            <span class="badge-label">ACCESS CARD</span>
+            <span class="badge-status"><i></i>ACTIVE</span>
+          </div>
+          <div class="badge-photo">ST</div>
+          <div class="badge-name">SURLA BALA TEJA</div>
+          <div class="badge-role">CYBERSECURITY · GIET · 2025</div>
+          <div class="badge-barcode"></div>
+          <div class="badge-id">ID// CS-2025-0417</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="about" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">About</p>
+      <h2>Protecting systems is a design problem too</h2>
+    </div>
+    <div class="about-grid reveal">
+      <div>
+        <p>I'm a Cybersecurity graduate (B.Tech, 2025) from Godavari Institute of Engineering and Technology (JNTUK). My work centers on understanding how systems fail — from unsecured IoT traffic to vulnerable web applications — and building the detection and defense layers that stop those failures early.</p>
+        <p>Alongside security, I build full applications: web interfaces, data dashboards, and AI-assisted tools. I like projects that combine both worlds — software that is genuinely useful, and built with an eye for what could go wrong.</p>
+      </div>
+      <ul class="fact-list">
+        <li><span>Based in</span><span>Andhra Pradesh, India</span></li>
+        <li><span>Focus</span><span>Cybersecurity &amp; Applied AI</span></li>
+        <li><span>Education</span><span>B.Tech, CGPA 7.4</span></li>
+        <li><span>Languages spoken</span><span>English, Telugu, Hindi</span></li>
+        <li><span>Status</span><span>Open to opportunities</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="skills" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">Skills</p>
+      <h2>Toolkit</h2>
+      <p>Core languages and tools I build with, across security, software and data.</p>
+    </div>
+    <div class="skill-groups reveal">
+      <div class="skill-group">
+        <h3>Languages</h3>
+        <div class="chips">
+          <span class="chip">Python</span>
+          <span class="chip">Java</span>
+          <span class="chip">C</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h3>Frontend</h3>
+        <div class="chips">
+          <span class="chip">HTML</span>
+          <span class="chip">CSS</span>
+          <span class="chip">JavaScript</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h3>Data &amp; Analysis</h3>
+        <div class="chips">
+          <span class="chip">SQL</span>
+          <span class="chip">Excel</span>
+          <span class="chip">Power BI</span>
+        </div>
+      </div>
+      <div class="skill-group">
+        <h3>Security Focus</h3>
+        <div class="chips">
+          <span class="chip">Intrusion Detection</span>
+          <span class="chip">IoT Security</span>
+          <span class="chip">Web App Threats</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="projects" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">Projects</p>
+      <h2>Selected work</h2>
+      <p>Three builds that span embedded security, applied AI, and full-stack engineering.</p>
+    </div>
+
+    <div class="project-list">
+
+      <article class="project-card reveal">
+        <div class="project-card-inner">
+          <div>
+            <div class="project-meta">
+              <span class="tag tag-domain">IoT Security</span>
+              <span class="tag tag-status">Academic · Capstone Project</span>
+            </div>
+            <h3>Intrusion Detection System for IoT Devices</h3>
+            <p>Built on a Jetson Orin Nano, this system watches traffic across a network of connected IoT devices and flags intrusion patterns in real time. As more of daily life runs through connected devices, the same convenience opens new attack surfaces — this project aims to close that gap by alerting users the moment suspicious activity is detected, rather than after the damage is done.</p>
+            <div class="stack-row">
+              <span>Jetson Orin Nano</span>
+              <span>Python</span>
+              <span>Network Monitoring</span>
+              <span>Edge Computing</span>
+            </div>
+          </div>
+          <div class="project-index">IDS-01</div>
+        </div>
+      </article>
+
+      <article class="project-card reveal">
+        <div class="project-card-inner">
+          <div>
+            <div class="project-meta">
+              <span class="tag tag-domain">Healthcare AI</span>
+              <span class="tag tag-status">Prototype</span>
+            </div>
+            <h3>HealthGuide AI — Patient Triage &amp; Advisory Assistant</h3>
+            <p>A chat-based assistant designed for a hospital's patient-facing side. Patients describe symptoms in plain language and get triage-style guidance — not a diagnosis, but a clear next step: what to watch for, when to see a doctor, and how urgent it might be. Built-in quick-symptom shortcuts speed up common cases, a doctor directory and appointment scheduler let patients book or cancel visits without calling the front desk, and a country-aware emergency directory surfaces the right number immediately if symptoms sound serious. A persistent medical disclaimer keeps the tool honest about its limits, and it can run fully offline in a local demo mode or connect to a live AI model for richer conversations.</p>
+            <div class="stack-row">
+              <span>Python</span>
+              <span>Streamlit</span>
+              <span>Conversational AI</span>
+              <span>Appointment Scheduling</span>
+            </div>
+          </div>
+          <div class="project-index">HGA-02</div>
+        </div>
+      </article>
+
+      <article class="project-card reveal">
+        <div class="project-card-inner">
+          <div>
+            <div class="project-meta">
+              <span class="tag tag-domain">Full-Stack</span>
+              <span class="tag tag-status">Training Project</span>
+            </div>
+            <h3>Netflix Clone — Full-Stack Streaming UI</h3>
+            <p>A rebuild of Netflix's core browsing experience during a full-stack traineeship at Techwing. The front end handles layout, browsing and interaction in HTML, CSS and JavaScript, while the back end — built with Java, Hibernate and JSP — handles data and persistence. A foundation project for understanding how a real product connects its interface to its data layer.</p>
+            <div class="stack-row">
+              <span>HTML</span>
+              <span>CSS</span>
+              <span>JavaScript</span>
+              <span>Java</span>
+              <span>Hibernate</span>
+              <span>JSP</span>
+            </div>
+          </div>
+          <div class="project-index">FSC-03</div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<section id="experience" class="section">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="kicker">Experience</p>
+      <h2>Internships</h2>
+    </div>
+    <div class="timeline reveal">
+      <div class="t-item">
+        <div class="t-top"><h3>Cybersecurity Intern</h3><time>8+ weeks · Summer</time></div>
+        <p class="t-org">AIMERS Society</p>
+        <p>Explored common web application intrusions including SQL injection and DDoS attacks, used Power BI for data analysis, and worked with LLMs on Hugging Face — including building a sunflower detection project.</p>
+      </div>
+      <div class="t-item">
+        <div class="t-top"><h3>Full-Stack Trainee</h3><time>3 months</time></div>
+        <p class="t-org">Techwing</p>
+        <p>Built a Netflix clone end-to-end — HTML, CSS and JavaScript on the front end, with Java, Hibernate and JSP powering the back end. See the Netflix Clone project above.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="education" class="section">
+  <div class="wrap">
+    <div class="two-col">
+      <div>
+        <div class="section-head reveal">
+          <p class="kicker">Education</p>
+          <h2>Academic path</h2>
+        </div>
+        <div class="timeline reveal">
+          <div class="t-item">
+            <div class="t-top"><h3>B.Tech, Cybersecurity</h3><time>2025</time></div>
+            <p class="t-org">Godavari Institute of Engineering and Technology (JNTUK)</p>
+            <p>CGPA 7.4</p>
+          </div>
+          <div class="t-item">
+            <div class="t-top"><h3>Intermediate (MPC)</h3><time>2021</time></div>
+            <p class="t-org">Sri Prakash Junior College (APBIE)</p>
+            <p>88%</p>
+          </div>
+          <div class="t-item">
+            <div class="t-top"><h3>Schooling</h3><time>2019</time></div>
+            <p class="t-org">Sun Shine English Medium School (APSSC)</p>
+            <p>CGPA 9.0</p>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-head reveal">
+          <p class="kicker">Certifications</p>
+          <h2>Credentials</h2>
+        </div>
+        <ul class="cert-list reveal">
+          <li>Java Programming Course</li>
+          <li>NPTEL — Cyber Security</li>
+          <li>English Certification — MEPRO</li>
+        </ul>
+        <div class="section-head reveal" style="margin-top:40px;">
+          <p class="kicker">Outside work</p>
+          <h2 style="font-size:1.3rem;">Chess · Badminton · Music</h2>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contact" class="section">
+  <div class="wrap">
+    <div class="contact-panel reveal">
+      <div>
+        <h2>Let's talk.</h2>
+        <p>Open to cybersecurity, software and full-stack roles. Reach out directly — I typically respond within a day.</p>
+      </div>
+      <div class="contact-links">
+        <a href="mailto:surlabalateja@gmail.com">Email <span>surlabalateja@gmail.com</span></a>
+        <a href="tel:+916300910788">Phone <span>+91 6300910788</span></a>
+        <a href="https://www.linkedin.com/in/bala-teja-surla-823329287" target="_blank" rel="noopener">LinkedIn <span>bala-teja-surla</span></a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <span><strong>Surla Bala Teja</strong> — Cybersecurity Engineer</span>
+    <span>Built for portfolio purposes · 2026</span>
+  </div>
+</footer>
+
+<script>
+  // 3D tilt interaction
+  function applyTilt(el, max, scale){
+    scale = scale || 1;
+    el.addEventListener('mousemove', function(e){
+      var r = el.getBoundingClientRect();
+      var x = (e.clientX - r.left) / r.width - 0.5;
+      var y = (e.clientY - r.top) / r.height - 0.5;
+      el.style.transform = 'perspective(1000px) rotateY(' + (x*max) + 'deg) rotateX(' + (-y*max) + 'deg) scale(' + scale + ')';
+    });
+    el.addEventListener('mouseleave', function(){
+      el.style.transform = 'perspective(1000px) rotateY(0deg) rotateX(0deg) scale(1)';
+    });
+  }
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if(!reduceMotion){
+    var badge = document.getElementById('badge');
+    if(badge) applyTilt(badge, 14, 1.03);
+
+    document.querySelectorAll('.project-card-inner').forEach(function(card){
+      applyTilt(card, 5, 1.005);
+    });
+  }
+
+  // Scroll reveal
+  var revealEls = document.querySelectorAll('.reveal');
+  if('IntersectionObserver' in window && !reduceMotion){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(entry){
+        if(entry.isIntersecting){
+          entry.target.classList.add('in-view');
+          io.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.15 });
+    revealEls.forEach(function(el){ io.observe(el); });
+  } else {
+    revealEls.forEach(function(el){ el.classList.add('in-view'); });
+  }
+</script>
+</body>
+</html>
+"""
+
+
+@app.route("/")
+def portfolio():
+    return PORTFOLIO_HTML
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
