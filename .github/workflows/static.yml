@@ -32,6 +32,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Setup Pages
+      - name: Create index.html symlink
+        run: cp bala_teja_portfolio.html index.html
         uses: actions/configure-pages@v5
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
